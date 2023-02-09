@@ -1,0 +1,7 @@
+POST http://localhost:5030/auth/login
+Content-Type: application/json
+
+{
+    "email": "info@farhad.su",
+    "password": "qwery123"
+}
