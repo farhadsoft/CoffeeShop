@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using CoffeeShop.Application.Authentication.Commands.Register;
+using CoffeeShop.Application.Authentication.Queries.Login;
+using CoffeeShop.Application.Authentication.Common;
 using CoffeeShop.Contracts.Authentication;
-using CoffeeShop.Application.Services.Authentication;
 
 namespace CoffeeShop.Api.Controllers;
 
@@ -8,19 +11,18 @@ namespace CoffeeShop.Api.Controllers;
 [Route("auth")]
 public class AuthenticationController : ControllerBase
 {
-    private readonly IAuthenticationServive _authenticationService;
+    private readonly ISender _sender;
 
-    public AuthenticationController(IAuthenticationServive authenticationService)
+    public AuthenticationController(ISender sender)
     {
-        _authenticationService = authenticationService;
+        _sender = sender;
     }
 
     [HttpPost("login")]
-    public IActionResult Login(LoginRequest request)
+    public async Task<IActionResult> Login(LoginRequest request)
     {
-        var authRequest = _authenticationService.Login(
-            request.Email,
-            request.Password);
+        var query = new LoginQuery(request.Email, request.Password);
+        AuthenticationResult authRequest = await _sender.Send(query);
 
         var response = new AuthenticationResponce(
             authRequest.User.Id,
@@ -34,13 +36,10 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost("register")]
-    public IActionResult Register(RegisterRequest request)
+    public async Task<IActionResult> Register(RegisterRequest request)
     {
-        var authRequest = _authenticationService.Register(
-            request.FirstName,
-            request.LastName,
-            request.Email,
-            request.Password);
+        var command = new RegisterCommand(request.FirstName, request.LastName, request.Email, request.Password);
+        AuthenticationResult authRequest = await _sender.Send(command);
 
         var response = new AuthenticationResponce(
             authRequest.User.Id,
